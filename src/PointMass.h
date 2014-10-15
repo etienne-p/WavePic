@@ -25,7 +25,7 @@ class PointMass {
     
 public:
     
-    float mass, damping;
+    float mass;
     
      ofVec3f position;
     

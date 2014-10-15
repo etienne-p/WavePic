@@ -38,4 +38,11 @@ class ofApp : public ofBaseApp{
     
         ofVboMesh mesh;
         ofImage img;
+    
+        ofVec3f prevMousePosition, mousePosition;
+        float mouseZ;
+    
+        bool mouseMovedFlag;
+    
+   
 };

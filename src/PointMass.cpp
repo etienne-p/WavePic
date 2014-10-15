@@ -13,7 +13,6 @@ PointMass::PointMass(ofVec3f position_){
     lastPosition.set(position_);
     acceleration.set(0, 0, 0);
     mass = 1.f;
-    damping = 20.f;
     pinned = false;
 }
 
@@ -47,10 +46,6 @@ void PointMass::updateInteractions(ofVec3f prevMousePosition, ofVec3f mousePosit
 }
 
 void PointMass::solveConstraints(){
-    
-    /*for(vector<Link>::iterator it = links.begin(); it != links.end(); ++it) {
-        solveLink(it);
-    }*/
     
     for (int i = 0, len = links.size(); i < len; ++i){
         solveLink(&links[i]);
@@ -87,7 +82,6 @@ void PointMass::solveLink(Link * link){
     // heavier objects will be pushed/pulled less than attached light objects
     p1->position += diff * (scalarP1 * difference);
     p2->position -= diff * (scalarP2 * difference);
-    
 }
 
 void PointMass::applyForce(ofVec3f force_){

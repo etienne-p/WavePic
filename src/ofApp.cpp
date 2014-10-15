@@ -3,23 +3,28 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     
-    float cellSide = 10.f;
+    // TODO: refactor flag
+    mouseMovedFlag = false;
+    mouseZ = 20.f;
     
-    columns = ofGetWidth() / cellSide;
-    rows = ofGetHeight() / cellSide;
+    float cellSide = 20.f;
+    
+    columns = (int) (ofGetWidth() / cellSide);
+    rows = (int) (ofGetHeight() / cellSide);
     mouseInfluenceSize = 50.f;
-    mouseInfluenceScalar = 1.f;
+    mouseInfluenceScalar = .1f;
     timeStamp = ofGetElapsedTimef();
     
     // create cells
-    for (int x = 0; x < columns; ++x){
-        for (int y = 0; y < rows; ++y){
+    
+    for (int y = 0; y < rows; ++y){
+        for (int x = 0; x < columns; ++x){
             
             ofVec3f position = ofVec3f(cellSide * x, cellSide * y, 0);
             PointMass pm = PointMass(position);
             
             // Pinned if on border
-            if ((x * y * (x - columns - 1) * (y - rows - 1)) == 0)
+            if ((x * y * (columns - x - 1) * (rows - y - 1)) == 0)
                 pm.pinTo(position);
             
             pointMasses.push_back(pm);
@@ -27,17 +32,16 @@ void ofApp::setup(){
     }
     
     // link params
-    float restingDistance = cellSide;
-    float stiffness = 0.9f;
+    float stiffness = 0.2f;
     
     // create links
-    for (int x = 0; x < columns - 1; ++x){
-        for (int y = 0; y < rows - 1; ++y){
-            int index = y * rows + x;
+    for (int y = 0; y < rows - 1; ++y){
+        for (int x = 0; x < columns - 1; ++x){
+            int index = y * columns + x;
             // attach to left node
-            pointMasses[index].attachTo(&pointMasses[index + 1], restingDistance, stiffness);
+            pointMasses[index].attachTo(&pointMasses[index + 1], cellSide, stiffness);
             // attach to bottom node
-            pointMasses[index].attachTo(&pointMasses[index + columns], restingDistance, stiffness);
+            pointMasses[index].attachTo(&pointMasses[index + columns], cellSide, stiffness);
         }
     }
     
@@ -74,10 +78,10 @@ void ofApp::setup(){
 			 */
             
             // add face
-			ofVec3f nw = getVertexFromImg(img, x * cellSide, y * cellSide);
-			ofVec3f ne = getVertexFromImg(img, (x + 1) * cellSide, y * cellSide);
-			ofVec3f sw = getVertexFromImg(img, x * cellSide, (y + 1) * cellSide);
-			ofVec3f se = getVertexFromImg(img, (x + 1) * cellSide, (y + 1) * cellSide);
+			ofVec3f nw = ofVec3f(x * cellSide, y * cellSide, 0);
+			ofVec3f ne = ofVec3f((x + 1) * cellSide, y * cellSide, 0);
+			ofVec3f sw = ofVec3f(x * cellSide, (y + 1) * cellSide, 0);
+			ofVec3f se = ofVec3f((x + 1) * cellSide, (y + 1) * cellSide, 0);
             
             addFace(mesh, nw, ne, se, sw);
             
@@ -105,38 +109,71 @@ void ofApp::setup(){
 void ofApp::update(){
     
     // update physics
-    /*
-    float elapsedTime = ofGetElapsedTimef()
+    
+    float elapsedTime = ofGetElapsedTimef();
     float timeStep = elapsedTime - timeStamp;
     timeStamp = elapsedTime;
     
-    for(vector<PointMasse>::iterator it = pointMasses.begin(); it != pointMasses.end(); ++it) {
-        it->updatePhysics(timeStep);
+    for(int i = 0, len = pointMasses.size(); i < len; ++i) {
+        pointMasses[i].updatePhysics(timeStep);
+        pointMasses[i].solveConstraints();
+        if (mouseMovedFlag) pointMasses[i].updateInteractions(prevMousePosition, mousePosition, mouseInfluenceSize, mouseInfluenceScalar);
     }
-    */
+    
+    prevMousePosition.set(mousePosition);
+    
     // update vbo
     
     // TMP: start with random animation so we know we're able to animate vertices
-    vector<ofVec3f>& vertices = mesh.getVertices();
     
-    for(vector<ofVec3f>::iterator it = vertices.begin(); it != vertices.end(); ++it) {
-        it->x += ofRandom(2.0);
-        it->y += ofRandom(2.0);
-        it->z += ofRandom(2.0);
-    }
-
+    //vector<ofVec3f>& vertices = mesh.getVertices();
+    
+    
+    
+    // iterate over cells
+    /*for (int x = 0; x < columns - 1; ++x){
+        
+        for (int y = 0; y < rows - 1; ++y){
+     
+            int pmIndex = y * columns + x; // top left pointMass index
+            
+            int vIndex = pmIndex* 6; // 3 vertices / tri, 6 vertices / cell
+            
+            //nw
+            vertices[vIndex].set(pointMasses[pmIndex].position);
+            vertices[vIndex + 3].set(pointMasses[pmIndex].position);
+            
+            //ne
+            vertices[vIndex + 1].set(pointMasses[pmIndex + 1].position);
+            
+            //se
+            vertices[vIndex + 2].set(pointMasses[pmIndex + columns + 1].position);
+            vertices[vIndex + 4].set(pointMasses[pmIndex + columns + 1].position);
+            
+            //sw
+            vertices[vIndex + 5].set(pointMasses[pmIndex + columns].position);
+        }
+        
+    }*/
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
     
     ofBackgroundGradient(ofColor(64), ofColor(0));
-	
+	/*
     // bind texture
     img.bind();
     // draw mesh
 	mesh.draw();
 	img.unbind();
+     */
+    
+    ofSetColor(255, 0, 0);
+    
+    for(int i = 0, len = pointMasses.size(); i < len; ++i) {
+        ofCircle(pointMasses[i].position.x, pointMasses[i].position.y, 2.f);
+    }
 
 }
 
@@ -152,25 +189,26 @@ void ofApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y ){
-    
-    // TODO: interact with grid
-    
-
+    mouseMovedFlag = true;
+    mousePosition.set(x, y, mouseZ);
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
-
+    mouseMovedFlag = true;
+    mousePosition.set(x, y, mouseZ);
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-
+    mouseMovedFlag = true;
+    mousePosition.set(x, y, mouseZ);
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
-
+    mouseMovedFlag = true;
+    mousePosition.set(x, y, mouseZ);
 }
 
 //--------------------------------------------------------------
