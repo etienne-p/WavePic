@@ -47,7 +47,7 @@ void PointMass::updateInteractions(ofVec3f prevMousePosition, ofVec3f mousePosit
 
 void PointMass::solveConstraints(){
     
-    for (int i = 0, len = links.size(); i < len; ++i){
+    for (int i = 0, len = links.size(); i < len; i++){
         solveLink(&links[i]);
     }
 

@@ -7,7 +7,7 @@ void ofApp::setup(){
     mouseMovedFlag = false;
     mouseZ = 20.f;
     
-    float cellSide = 20.f;
+    float cellSide = 40.f;
     
     columns = (int) (ofGetWidth() / cellSide);
     rows = (int) (ofGetHeight() / cellSide);
@@ -17,8 +17,8 @@ void ofApp::setup(){
     
     // create cells
     
-    for (int y = 0; y < rows; ++y){
-        for (int x = 0; x < columns; ++x){
+    for (int y = 0; y < rows; y++){
+        for (int x = 0; x < columns; x++){
             
             ofVec3f position = ofVec3f(cellSide * x, cellSide * y, 0);
             PointMass pm = PointMass(position);
@@ -35,8 +35,8 @@ void ofApp::setup(){
     float stiffness = 0.2f;
     
     // create links
-    for (int y = 0; y < rows - 1; ++y){
-        for (int x = 0; x < columns - 1; ++x){
+    for (int y = 0; y < rows - 1; y++){
+        for (int x = 0; x < columns - 1; x++){
             int index = y * columns + x;
             // attach to left node
             pointMasses[index].attachTo(&pointMasses[index + 1], cellSide, stiffness);
@@ -62,13 +62,13 @@ void ofApp::setup(){
 	int imgHeight = img.getHeight();
     ofVec2f imageSize(imgWidth, imgHeight);
     
-    float dx = imgWidth / columns;
-    float dy = imgHeight / rows;
+    //float dx = imgWidth / columns;
+    //float dy = imgHeight / rows;
     
     // Build mesh
     // TODO: Refactor: put in the same loop that link creation?
-    for (int x = 0; x < columns - 1; ++x){
-        for (int y = 0; y < rows - 1; ++y){
+    for (int y = 0; y < rows; y++){
+        for (int x = 0; x < columns; x++){
             
 			/*
 			 To construct a mesh, we have to build a collection of quads made up of
@@ -109,7 +109,6 @@ void ofApp::setup(){
 void ofApp::update(){
     
     // update physics
-    
     float elapsedTime = ofGetElapsedTimef();
     float timeStep = elapsedTime - timeStamp;
     timeStamp = elapsedTime;
@@ -121,23 +120,17 @@ void ofApp::update(){
     }
     
     prevMousePosition.set(mousePosition);
-    
-    // update vbo
-    
-    // TMP: start with random animation so we know we're able to animate vertices
-    
-    //vector<ofVec3f>& vertices = mesh.getVertices();
-    
-    
-    
+   
+    // update vertices
+    vector<ofVec3f>& vertices = mesh.getVertices();
+
     // iterate over cells
-    /*for (int x = 0; x < columns - 1; ++x){
-        
-        for (int y = 0; y < rows - 1; ++y){
+    for (int y = 0; y < rows - 1; y++){
+        for (int x = 0; x < columns - 1; x++){
      
             int pmIndex = y * columns + x; // top left pointMass index
             
-            int vIndex = pmIndex* 6; // 3 vertices / tri, 6 vertices / cell
+            int vIndex = pmIndex * 6; // 3 vertices / tri, 6 vertices / cell
             
             //nw
             vertices[vIndex].set(pointMasses[pmIndex].position);
@@ -154,26 +147,28 @@ void ofApp::update(){
             vertices[vIndex + 5].set(pointMasses[pmIndex + columns].position);
         }
         
-    }*/
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
     
     ofBackgroundGradient(ofColor(64), ofColor(0));
-	/*
+	
+    ofSetColor(255, 255, 255);
     // bind texture
     img.bind();
     // draw mesh
 	mesh.draw();
 	img.unbind();
-     */
     
     ofSetColor(255, 0, 0);
     
     for(int i = 0, len = pointMasses.size(); i < len; ++i) {
         ofCircle(pointMasses[i].position.x, pointMasses[i].position.y, 2.f);
     }
+    
+    
 
 }
 
