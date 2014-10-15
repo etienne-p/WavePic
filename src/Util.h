@@ -13,7 +13,7 @@
 
 namespace Util {
     
-    float distPointToSegmentSquared(ofVec3f prevMousePosition, ofVec3f mousePosition, ofVec3f position);
+    float distPointToSegment(ofVec3f prevMousePosition, ofVec3f mousePosition, ofVec3f position);
 
 };
 

@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 #include "PointMass.h"
-#include "Link.h"
 
 class ofApp : public ofBaseApp{
 
@@ -37,6 +36,6 @@ class ofApp : public ofBaseApp{
         void addTexCoords(ofMesh& mesh, ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d);
         ofVec3f getVertexFromImg(ofImage& img, int x, int y);
     
-        ofVboMesh vboMesh;
+        ofVboMesh mesh;
         ofImage img;
 };

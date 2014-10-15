@@ -10,23 +10,34 @@
 #define __WavePic__PointMass__
 
 #include "ofMain.h"
-#include "Link.h"
+#include "Util.h"
+
 
 class PointMass {
+    
+    typedef struct {
+        PointMass * p1;
+        PointMass * p2;
+        float restingDistance;
+        float stiffness;
+    } Link;
+
     
 public:
     
     float mass, damping;
     
+     ofVec3f position;
+    
     void updatePhysics(float timeStep_);
     
-    void updateInteractions();
+    void updateInteractions(ofVec3f prevMousePosition, ofVec3f mousePosition, float mouseInfluenceSize, float mouseInfluenceScalar);
     
     void solveConstraints();
     
-    void attachTo(PointMass P_, float restingDist_, float stiff_, float tearSensitivity_);
+    void attachTo(PointMass* P_, float restingDist_, float stiff_);
     
-    void removeLink();
+    void solveLink(Link* link);
     
     void applyForce(ofVec3f force_);
     
@@ -38,14 +49,11 @@ public:
 
 private:
     
-    ofVec3f lastPosition, position, acceleration, pinPosition;
+    ofVec3f lastPosition, acceleration, pinPosition;
     
     bool pinned;
     
     vector <Link> links;
-    
-    
-    
     
 };
 

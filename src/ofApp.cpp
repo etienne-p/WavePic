@@ -15,7 +15,7 @@ void ofApp::setup(){
     for (int x = 0; x < columns; ++x){
         for (int y = 0; y < rows; ++y){
             
-            ofvec3f position = ofvec3f(cellSide * x, cellSide * y, 0);
+            ofVec3f position = ofVec3f(cellSide * x, cellSide * y, 0);
             PointMass pm = PointMass(position);
             
             // Pinned if on border
@@ -29,16 +29,15 @@ void ofApp::setup(){
     // link params
     float restingDistance = cellSide;
     float stiffness = 0.9f;
-    float tearSensitivity = 2.f;
     
     // create links
     for (int x = 0; x < columns - 1; ++x){
         for (int y = 0; y < rows - 1; ++y){
             int index = y * rows + x;
             // attach to left node
-            pointMasses[index].attachTo(pointMasses[index + 1], restingDistance, stiffness, tearSensitivity);
+            pointMasses[index].attachTo(&pointMasses[index + 1], restingDistance, stiffness);
             // attach to bottom node
-            pointMasses[index].attachTo(pointMasses[index + columns], restingDistance, stiffness, tearSensitivity);
+            pointMasses[index].attachTo(&pointMasses[index + columns], restingDistance, stiffness);
         }
     }
     
@@ -120,10 +119,10 @@ void ofApp::update(){
     // TMP: start with random animation so we know we're able to animate vertices
     vector<ofVec3f>& vertices = mesh.getVertices();
     
-    for(vector<start>::iterator it = vertices.begin(); it != vertices.end(); ++it) {
-        it->x += ofRandom(0.1);
-        it->y += ofRandom(0.1);
-        it->z += ofRandom(0.1);
+    for(vector<ofVec3f>::iterator it = vertices.begin(); it != vertices.end(); ++it) {
+        it->x += ofRandom(2.0);
+        it->y += ofRandom(2.0);
+        it->z += ofRandom(2.0);
     }
 
 }

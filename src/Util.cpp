@@ -38,18 +38,18 @@
 
 float Util::distPointToSegment(ofVec3f segP0, ofVec3f segP1, ofVec3f point){
 
-    ofvec3f v = segP1 - segP0;
-    ofvec3f w = point - segP0;
+    ofVec3f v = segP1 - segP0;
+    ofVec3f w = point - segP0;
     
     float c1 = w.dot(v);
     if ( c1 <= 0 )
-        return point.distance(segP0)
+        return point.distance(segP0);
     
     float c2 = v.dot(v);
     if ( c2 <= c1 )
         return point.distance(segP1);
     
     float b = c1 / c2;
-    Point Pb = segP0 + b * v;
-    return point.distance(Pb)
+    ofVec3f Pb = segP0 + b * v;
+    return point.distance(Pb);
 }
