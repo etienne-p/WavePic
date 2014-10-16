@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "PointMass.h"
+#include "ofxUI.h"
 
 class ofApp : public ofBaseApp{
 
@@ -22,12 +23,14 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
     
-        // custom
+        // Custom
         int columns, rows;
         vector <PointMass> pointMasses;
     
         float mouseInfluenceSize, mouseInfluenceScalar;
         float timeStamp;
+    
+        void resetGrid(int width, int height, float cellSide);
     
         // helper functions
         void addFace(ofMesh& mesh, ofVec3f a, ofVec3f b, ofVec3f c);
@@ -36,13 +39,23 @@ class ofApp : public ofBaseApp{
         void addTexCoords(ofMesh& mesh, ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d);
         ofVec3f getVertexFromImg(ofImage& img, int x, int y);
     
+        // 3d
         ofVboMesh mesh;
-        ofImage img;
+        ofTexture texture;
+        ofLight light;
+        ofMaterial material;
+        ofVec3f lightPosition;
+        ofVec3f lightDirection;
     
+        // Interact
         ofVec3f prevMousePosition, mousePosition;
         float mouseZ;
-    
         bool mouseMovedFlag;
+    
+        // UI
+        void guiEvent(ofxUIEventArgs &e);
+        ofxUICanvas *gui;
+                
     
    
 };

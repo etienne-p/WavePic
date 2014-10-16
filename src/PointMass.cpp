@@ -16,6 +16,10 @@ PointMass::PointMass(ofVec3f position_){
     pinned = false;
 }
 
+PointMass::~PointMass(){
+    links.clear();
+}
+
 void PointMass::updatePhysics(float timeStep_){
     
     // applyForce(0, mass * gravity, 0); // start without gravity

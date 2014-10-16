@@ -45,7 +45,7 @@ public:
     
     PointMass(ofVec3f position_);
     
-    // ~PointMass();
+    ~PointMass();
 
 private:
     
