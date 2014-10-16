@@ -1,5 +1,4 @@
 .DS_Store
-/bin/images/
-/bin/WavePicDebug
-/bin/WavePicDebug.app/
-
+/bin/images/*
+/bin/WavePicDebug.app/*
+/bin/data/settings.xml

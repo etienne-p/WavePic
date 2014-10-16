@@ -49,10 +49,10 @@ void PointMass::updateInteractions(ofVec3f prevMousePosition, ofVec3f mousePosit
     }
 }
 
-void PointMass::solveConstraints(){
+void PointMass::solveConstraints(float stiffnessMul){
     
     for (int i = 0, len = links.size(); i < len; i++){
-        solveLink(&links[i]);
+        solveLink(&links[i], stiffnessMul);
     }
 
     if (pinned) position.set(pinPosition);
@@ -63,7 +63,7 @@ void PointMass::attachTo(PointMass * pm_, float restingDist_, float stiff_){
     links.push_back(link);
 }
 
-void PointMass::solveLink(Link * link){
+void PointMass::solveLink(Link * link, float stiffnessMul){
     
     PointMass* p1 = link->p1;
     PointMass* p2 = link->p2;
@@ -79,8 +79,8 @@ void PointMass::solveLink(Link * link){
     // Inverse the mass quantities
     float im1 = 1 / p1->mass;
     float im2 = 1 / p2->mass;
-    float scalarP1 = (im1 / (im1 + im2)) * link->stiffness;
-    float scalarP2 = link->stiffness - scalarP1;
+    float scalarP1 = (im1 / (im1 + im2)) * link->stiffness * stiffnessMul;
+    float scalarP2 = link->stiffness * stiffnessMul - scalarP1;
     
     // Push/pull based on mass
     // heavier objects will be pushed/pulled less than attached light objects

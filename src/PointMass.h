@@ -33,11 +33,11 @@ public:
     
     void updateInteractions(ofVec3f prevMousePosition, ofVec3f mousePosition, float mouseInfluenceSize, float mouseInfluenceScalar);
     
-    void solveConstraints();
+    void solveConstraints(float stiffnessMul);
     
     void attachTo(PointMass* P_, float restingDist_, float stiff_);
     
-    void solveLink(Link* link);
+    void solveLink(Link* link, float stiffnessMul);
     
     void applyForce(ofVec3f force_);
     

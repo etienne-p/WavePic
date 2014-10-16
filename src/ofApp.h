@@ -7,11 +7,12 @@
 class ofApp : public ofBaseApp{
 
 	public:
-    
+
         // base
 		void setup();
 		void update();
 		void draw();
+        void exit();
 
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -30,7 +31,7 @@ class ofApp : public ofBaseApp{
         float mouseInfluenceSize, mouseInfluenceScalar;
         float timeStamp;
     
-        void resetGrid(int width, int height, float cellSide);
+        void resetGrid();
     
         // helper functions
         void addFace(ofMesh& mesh, ofVec3f a, ofVec3f b, ofVec3f c);
@@ -49,13 +50,17 @@ class ofApp : public ofBaseApp{
     
         // Interact
         ofVec3f prevMousePosition, mousePosition;
+        float linkStiffnessMul;
         float mouseZ;
-        bool mouseMovedFlag;
+        bool mouseInteract;
     
         // UI
         void guiEvent(ofxUIEventArgs &e);
         ofxUICanvas *gui;
-                
     
-   
+        void importImage();
+        void importImage(string path);
+        void exportImage();
+        ofFbo fbo;
+        ofPixels pixels;
 };
