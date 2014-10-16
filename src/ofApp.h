@@ -12,8 +12,7 @@ class ofApp : public ofBaseApp{
 		void setup();
 		void update();
 		void draw();
-        void exit();
-
+        
 		void keyPressed(int key);
 		void keyReleased(int key);
 		void mouseMoved(int x, int y );
@@ -44,7 +43,6 @@ class ofApp : public ofBaseApp{
         ofVboMesh mesh;
         ofTexture texture;
         ofLight light;
-        ofMaterial material;
         ofVec3f lightPosition;
         ofVec3f lightDirection;
     
@@ -56,11 +54,14 @@ class ofApp : public ofBaseApp{
     
         // UI
         void guiEvent(ofxUIEventArgs &e);
-        ofxUICanvas *gui;
+        ofxUICanvas gui;
     
+        // Import / Export
         void importImage();
         void importImage(string path);
         void exportImage();
         ofFbo fbo;
         ofPixels pixels;
+    
+        bool animateFlag;
 };

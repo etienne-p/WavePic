@@ -4,159 +4,142 @@
 void ofApp::setup(){
     
     ofSetVerticalSync(true);
-    
 	importImage("images/iceberg.png");
-    
     mouseInteract = false;
+    animateFlag = true;
     timeStamp = ofGetElapsedTimef();
-
 	mesh.setMode(OF_PRIMITIVE_TRIANGLES);
-    
-    // setup UI
-    gui = new ofxUICanvas();
     
     // grid
     columns = 10;
     rows = 10;
     resetGrid();
-    gui->addSlider("COLUMNS", 1.f, 100.f, columns);
-    gui->addSlider("ROWS", 1.f, 100.f, rows);
+    gui.addSlider("COLUMNS", 1.f, 100.f, columns);
+    gui.addSlider("ROWS", 1.f, 100.f, rows);
     
     linkStiffnessMul = .01f;
-    gui->addSlider("LINK_STIFFNESS_FACTOR", 0, 1.f, linkStiffnessMul);
+    gui.addSlider("LINK_STIFFNESS_FACTOR", 0, 1.f, linkStiffnessMul);
     
     // mouse
     mouseInfluenceSize = 100.f;
-    gui->addSlider("MOUSE_INFLUENCE_SIZE", 0, 400.f, mouseInfluenceSize);
+    gui.addSlider("MOUSE_INFLUENCE_SIZE", 0, 400.f, mouseInfluenceSize);
     mouseInfluenceScalar = .8f;
-    gui->addSlider("MOUSE_INFLUENCE_SCALAR", 0, 2.f, mouseInfluenceScalar);
+    gui.addSlider("MOUSE_INFLUENCE_SCALAR", 0, 2.f, mouseInfluenceScalar);
     mouseZ = -20.f;
-    gui->addSlider("MOUSE_Z", -100.f, 100.f, mouseZ);
-        
-    // material
-    gui->addSlider("MATERIAL_SHININESS", -1.f, 1.f, material.getShininess());
+    gui.addSlider("MOUSE_Z", -100.f, 100.f, mouseZ);
     
     // light
     light.setPointLight();
     
     // light smoothing
     ofSetSmoothLighting(true);
-    gui->addToggle("SMOOTH_LIGHT", true);
+    gui.addToggle("SMOOTH_LIGHT", true);
     
     // light position
     lightPosition = ofVec3f(0, 200, 200);
     light.setPosition(lightPosition);
     
     float dLightPos = 1000.f;
-    gui->addSlider("LIGHT_POSITION_X", -dLightPos, dLightPos, lightPosition.x);
-    gui->addSlider("LIGHT_POSITION_Y", -dLightPos, dLightPos, lightPosition.y);
-    gui->addSlider("LIGHT_POSITION_Z", -dLightPos, dLightPos, lightPosition.z);
+    gui.addSlider("LIGHT_POSITION_X", -dLightPos, dLightPos, lightPosition.x);
+    gui.addSlider("LIGHT_POSITION_Y", -dLightPos, dLightPos, lightPosition.y);
+    gui.addSlider("LIGHT_POSITION_Z", -dLightPos, dLightPos, lightPosition.z);
     
     // light direction
     lightDirection = ofVec3f(0, 1, 0);
     light.setOrientation(lightDirection);
     
     float dLightDir = 1.f;
-    gui->addSlider("LIGHT_DIRECTION_X", -dLightDir, dLightDir, lightDirection.x);
-    gui->addSlider("LIGHT_DIRECTION_Y", -dLightDir, dLightDir, lightDirection.y);
-    gui->addSlider("LIGHT_DIRECTION_Z", -dLightDir, dLightDir, lightDirection.z);
+    gui.addSlider("LIGHT_DIRECTION_X", -dLightDir, dLightDir, lightDirection.x);
+    gui.addSlider("LIGHT_DIRECTION_Y", -dLightDir, dLightDir, lightDirection.y);
+    gui.addSlider("LIGHT_DIRECTION_Z", -dLightDir, dLightDir, lightDirection.z);
     
     // load / save pic
-    gui->addButton("IMPORT", false);
-    gui->addButton("EXPORT", false);
+    gui.addButton("IMPORT", false);
+    gui.addButton("EXPORT", false);
     
-    gui->autoSizeToFitWidgets();
+    gui.autoSizeToFitWidgets();
     //gui->loadSettings("settings.xml");
-    ofAddListener(gui->newGUIEvent, this, &ofApp::guiEvent);
-}
-
-void ofApp::exit(){
-    gui->saveSettings("settings.xml");
-    delete gui;
+    ofAddListener(gui.newGUIEvent, this, &ofApp::guiEvent);
 }
 
 void ofApp::guiEvent(ofxUIEventArgs &e) {
     
     // TODO: dry this!!!
     
+    string name = e.getName();
+    
     // grid
-    if (e.getName() == "ROWS"){
+    if (name == "ROWS"){
         ofxUISlider *slider = e.getSlider();
         rows = (int) floorf(slider->getScaledValue());
         resetGrid();
-    } else if (e.getName() == "COLUMNS"){
+    } else if (name == "COLUMNS"){
         ofxUISlider *slider = e.getSlider();
         columns = (int) floorf(slider->getScaledValue());
         resetGrid();
     }
     
-    else if (e.getName() == "LINK_STIFFNESS_FACTOR"){
+    else if (name == "LINK_STIFFNESS_FACTOR"){
         ofxUISlider *slider = e.getSlider();
         linkStiffnessMul = slider->getScaledValue();
     }
     
     // mouse interaction
-    else if (e.getName() == "MOUSE_INFLUENCE_SIZE"){
+    else if (name == "MOUSE_INFLUENCE_SIZE"){
         ofxUISlider *slider = e.getSlider();
         mouseInfluenceSize = slider->getScaledValue();
-    } else if (e.getName() == "MOUSE_INFLUENCE_SCALAR"){
+    } else if (name == "MOUSE_INFLUENCE_SCALAR"){
         ofxUISlider *slider = e.getSlider();
         mouseInfluenceScalar = slider->getScaledValue();
-    } else if (e.getName() == "MOUSE_Z"){
+    } else if (name == "MOUSE_Z"){
         ofxUISlider *slider = e.getSlider();
         mouseZ = slider->getScaledValue();
     }
     
-    // material
-    else if (e.getName() == "MATERIAL_SHININESS"){
-        ofxUISlider *slider = e.getSlider();
-        material.setShininess(slider->getScaledValue());
-    }
-    
     // light smoothing
-    else if(e.getName() == "SMOOTH_LIGHT") {
+    else if(name == "SMOOTH_LIGHT") {
         ofxUIToggle *toggle = e.getToggle();
         ofSetSmoothLighting(toggle->getValue());
     }
     
     // light position
-    else if (e.getName() == "LIGHT_POSITION_X"){
+    else if (name == "LIGHT_POSITION_X"){
         ofxUISlider *slider = e.getSlider();
         lightPosition.x = slider->getScaledValue();
         light.setPosition(lightPosition);
-    } else if (e.getName() == "LIGHT_POSITION_Y"){
+    } else if (name == "LIGHT_POSITION_Y"){
         ofxUISlider *slider = e.getSlider();
         lightPosition.y = slider->getScaledValue();
         light.setPosition(lightPosition);
-    } else if (e.getName() == "LIGHT_POSITION_Z"){
+    } else if (name == "LIGHT_POSITION_Z"){
         ofxUISlider *slider = e.getSlider();
         lightPosition.z = slider->getScaledValue();
         light.setPosition(lightPosition);
     }
     
     // light direction
-    else if (e.getName() == "LIGHT_DIRECTION_X"){
+    else if (name == "LIGHT_DIRECTION_X"){
         ofxUISlider *slider = e.getSlider();
         lightDirection.x = slider->getScaledValue();
         light.setOrientation(lightDirection);
-    } else if (e.getName() == "LIGHT_DIRECTION_Y"){
+    } else if (name == "LIGHT_DIRECTION_Y"){
         ofxUISlider *slider = e.getSlider();
         lightDirection.y = slider->getScaledValue();
         light.setOrientation(lightDirection);
-    } else if (e.getName() == "LIGHT_DIRECTION_Z"){
+    } else if (name == "LIGHT_DIRECTION_Z"){
         ofxUISlider *slider = e.getSlider();
         lightDirection.z = slider->getScaledValue();
         light.setOrientation(lightDirection);
     }
-    
+        
     // import
-    else if (e.getName() == "IMPORT"){
+    else if (name == "IMPORT"){
         ofxUIButton *btn = e.getButton();
         if (btn->getValue()) importImage();
     }
     
     // export
-    else if (e.getName() == "EXPORT"){
+    else if (name == "EXPORT"){
         ofxUIButton *btn = e.getButton();
         if (btn->getValue()) exportImage();
     }
@@ -164,6 +147,8 @@ void ofApp::guiEvent(ofxUIEventArgs &e) {
 
 //--------------------------------------------------------------
 void ofApp::update(){
+    
+    if (!animateFlag) return;
     
     // update physics
     float elapsedTime = ofGetElapsedTimef();
@@ -206,6 +191,7 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     
+    // draw mesh on fbo
     ofSetColor(255, 255, 255);
     
     fbo.begin();
@@ -217,9 +203,7 @@ void ofApp::draw(){
     
     texture.bind();
     light.enable();
-    material.begin();
     mesh.draw();
-    material.end();
     light.disable();
     texture.unbind();
     
@@ -228,61 +212,39 @@ void ofApp::draw(){
     
     fbo.end();
     
+    // draw fbo, scaled to fit window
+    float sw = ofGetWidth();
+    float sh = ofGetHeight();
+    float sRatio = sw / sh;
+    
+    float imw = texture.getWidth();
+    float imh = texture.getHeight();
+    float imRatio = imw / imh;
+    
+    float scaleFactor;
+    
+    if (imRatio > sRatio){
+        // fit based on width
+        scaleFactor = sw / imw;
+    } else {
+        // fit based on height
+        scaleFactor = sh / imh;
+    }
+    
+    ofPushMatrix();
+    ofTranslate((sw - imw * scaleFactor) * 0.5, (sh - imh * scaleFactor) * 0.5);
+    ofScale(scaleFactor, scaleFactor);
+    
     fbo.draw(0, 0);
-}
-
-//--------------------------------------------------------------
-void ofApp::keyPressed(int key){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-    //mousePosition.set(x, y, mouseZ);
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-    mousePosition.set(x, y, mouseZ);
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-    mouseInteract = true;
-    mousePosition.set(x, y, mouseZ);
-    prevMousePosition.set(mousePosition);
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-    mouseInteract = false;
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
-
+    
+    ofPopMatrix();
 }
 
 // lets us update grid diemnsion and resolution
 void ofApp::resetGrid(){
     
-    float cellWidth = texture.getWidth() / (float) columns;
-    float cellHeight = texture.getWidth() / (float) rows;
+    float cellWidth = texture.getWidth() / (float) (columns - 1);
+    float cellHeight = texture.getWidth() / (float) (rows - 1);
     
     // create cells
     
@@ -304,7 +266,7 @@ void ofApp::resetGrid(){
     
     // link params
     float stiffness = 1.f;
-    
+    float cellDiag = sqrt(cellWidth * cellWidth + cellHeight * cellHeight);
     // create links
     for (int y = 0; y < rows - 1; y++){
         for (int x = 0; x < columns - 1; x++){
@@ -316,11 +278,10 @@ void ofApp::resetGrid(){
         }
     }
     
-    // we do not scale anymore, mesh size depends on its texture
-    // ofVec2f scaleTex((columns - 1) * cellWidth / texture.getWidth(), (rows - 1) * cellHeight / texture.getHeight());
-    
     // Build mesh
     mesh.clear();
+    
+    ofVec3f normal(0, 0, 1);
     
     for (int y = 0; y < rows; y++){
         for (int x = 0; x < columns; x++){
@@ -330,7 +291,7 @@ void ofApp::resetGrid(){
 			ofVec3f ne = ofVec3f((x + 1) * cellWidth, y * cellHeight, 0);
 			ofVec3f sw = ofVec3f(x * cellWidth, (y + 1) * cellHeight, 0);
 			ofVec3f se = ofVec3f((x + 1) * cellWidth, (y + 1) * cellHeight, 0);
-            
+                       
             addFace(mesh, nw, ne, se, sw);
             
             // add texture coordinates
@@ -338,17 +299,14 @@ void ofApp::resetGrid(){
 			ofVec2f nei((x + 1) * cellWidth, y * cellHeight);
 			ofVec2f swi(x * cellWidth, (y + 1) * cellHeight);
 			ofVec2f sei((x + 1) * cellWidth, (y + 1) * cellHeight);
-			
-			/*
-            nwi /= scaleTex;
-            nei /= scaleTex;
-            sei /= scaleTex;
-            swi /= scaleTex;
-            */
-            
+			       
             addTexCoords(mesh, nwi, nei, sei, swi);
+            
+            for (int k = 0; k < 6; k++) mesh.addNormal(normal);
 		}
 	}
+    
+    mesh.enableNormals();
 }
 
 void ofApp::importImage(){
@@ -362,7 +320,6 @@ void ofApp::importImage(){
     importImage(dfr.getPath());
 }
 
-
 void ofApp::importImage(string path){
     
     texture.clear();
@@ -371,10 +328,11 @@ void ofApp::importImage(string path){
     ofLoadImage(texture, path);
     fbo.allocate(texture.getWidth(), texture.getHeight(), GL_RGBA); // [fbo.destroy] is called in [fbo.allocate]
     pixels.allocate(texture.getWidth(), texture.getHeight(), OF_IMAGE_COLOR);
-    
 }
 
 void ofApp::exportImage(){
+    
+    gui.saveSettings("settings.xml");
     
     cout << "EXPORT!" << endl;
     
@@ -384,7 +342,56 @@ void ofApp::exportImage(){
     
     pixels.clear();
     fbo.readToPixels(pixels);
-    ofSaveImage(pixels, dfr.getPath());
+    ofSaveImage(pixels, dfr.getPath());    
+}
+
+//--------------------------------------------------------------
+void ofApp::keyPressed(int key){
+    if (key == 32) animateFlag = !animateFlag;
+}
+
+//--------------------------------------------------------------
+void ofApp::keyReleased(int key){
+    
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseMoved(int x, int y ){
+    //mousePosition.set(x, y, mouseZ);
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseDragged(int x, int y, int button){
+    // TODO: DRY THIS
+    ofVec3f mouse(x * texture.getWidth() / ofGetWidth(), y * texture.getHeight() / ofGetHeight(), mouseZ);
+    mousePosition.set(mouse);
+}
+
+//--------------------------------------------------------------
+void ofApp::mousePressed(int x, int y, int button){
+    mouseInteract = true;
+    ofVec3f mouse(x * texture.getWidth() / ofGetWidth(), y * texture.getHeight() / ofGetHeight(), mouseZ);
+    mousePosition.set(mouse);
+    prevMousePosition.set(mousePosition);
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseReleased(int x, int y, int button){
+    mouseInteract = false;
+}
+
+//--------------------------------------------------------------
+void ofApp::windowResized(int w, int h){
+    
+}
+
+//--------------------------------------------------------------
+void ofApp::gotMessage(ofMessage msg){
+    
+}
+
+//--------------------------------------------------------------
+void ofApp::dragEvent(ofDragInfo dragInfo){
     
 }
 
