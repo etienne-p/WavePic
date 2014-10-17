@@ -5,8 +5,8 @@
 #include "ofxUI.h"
 
 class ofApp : public ofBaseApp{
-
-	public:
+  
+    public:
 
         // base
 		void setup();
@@ -37,14 +37,12 @@ class ofApp : public ofBaseApp{
         void addFace(ofMesh& mesh, ofVec3f a, ofVec3f b, ofVec3f c, ofVec3f d);
         void addTexCoords(ofMesh& mesh, ofVec2f a, ofVec2f b, ofVec2f c);
         void addTexCoords(ofMesh& mesh, ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d);
-        ofVec3f getVertexFromImg(ofImage& img, int x, int y);
     
         // 3d
         ofVboMesh mesh;
         ofTexture texture;
         ofLight light;
         ofVec3f lightPosition;
-        ofVec3f lightDirection;
     
         // Interact
         ofVec3f prevMousePosition, mousePosition;
@@ -64,4 +62,6 @@ class ofApp : public ofBaseApp{
         ofPixels pixels;
     
         bool animateFlag;
+    
+        ofMatrix4x4 fboMatrix;
 };

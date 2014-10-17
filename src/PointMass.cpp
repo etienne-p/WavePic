@@ -96,3 +96,7 @@ void PointMass::pinTo(ofVec3f position_){
     pinned = true;
     pinPosition.set(position_);
 }
+
+bool PointMass::isPinned(){
+    return pinned;
+}

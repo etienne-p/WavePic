@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    
+        
     ofSetVerticalSync(true);
 	importImage("images/iceberg.png");
     mouseInteract = false;
@@ -16,7 +16,7 @@ void ofApp::setup(){
     resetGrid();
     gui.addSlider("COLUMNS", 1.f, 100.f, columns);
     gui.addSlider("ROWS", 1.f, 100.f, rows);
-    
+
     linkStiffnessMul = .01f;
     gui.addSlider("LINK_STIFFNESS_FACTOR", 0, 1.f, linkStiffnessMul);
     
@@ -38,33 +38,22 @@ void ofApp::setup(){
     // light position
     lightPosition = ofVec3f(0, 200, 200);
     light.setPosition(lightPosition);
-    
-    float dLightPos = 1000.f;
+
+    float dLightPos = 2800.f;
     gui.addSlider("LIGHT_POSITION_X", -dLightPos, dLightPos, lightPosition.x);
     gui.addSlider("LIGHT_POSITION_Y", -dLightPos, dLightPos, lightPosition.y);
-    gui.addSlider("LIGHT_POSITION_Z", -dLightPos, dLightPos, lightPosition.z);
-    
-    // light direction
-    lightDirection = ofVec3f(0, 1, 0);
-    light.setOrientation(lightDirection);
-    
-    float dLightDir = 1.f;
-    gui.addSlider("LIGHT_DIRECTION_X", -dLightDir, dLightDir, lightDirection.x);
-    gui.addSlider("LIGHT_DIRECTION_Y", -dLightDir, dLightDir, lightDirection.y);
-    gui.addSlider("LIGHT_DIRECTION_Z", -dLightDir, dLightDir, lightDirection.z);
+    gui.addSlider("LIGHT_POSITION_Z", -0.2f * dLightPos, dLightPos, lightPosition.z);
     
     // load / save pic
     gui.addButton("IMPORT", false);
     gui.addButton("EXPORT", false);
     
     gui.autoSizeToFitWidgets();
-    //gui->loadSettings("settings.xml");
+    //gui.loadSettings("settings.xml");
     ofAddListener(gui.newGUIEvent, this, &ofApp::guiEvent);
 }
 
 void ofApp::guiEvent(ofxUIEventArgs &e) {
-    
-    // TODO: dry this!!!
     
     string name = e.getName();
     
@@ -116,21 +105,6 @@ void ofApp::guiEvent(ofxUIEventArgs &e) {
         lightPosition.z = slider->getScaledValue();
         light.setPosition(lightPosition);
     }
-    
-    // light direction
-    else if (name == "LIGHT_DIRECTION_X"){
-        ofxUISlider *slider = e.getSlider();
-        lightDirection.x = slider->getScaledValue();
-        light.setOrientation(lightDirection);
-    } else if (name == "LIGHT_DIRECTION_Y"){
-        ofxUISlider *slider = e.getSlider();
-        lightDirection.y = slider->getScaledValue();
-        light.setOrientation(lightDirection);
-    } else if (name == "LIGHT_DIRECTION_Z"){
-        ofxUISlider *slider = e.getSlider();
-        lightDirection.z = slider->getScaledValue();
-        light.setOrientation(lightDirection);
-    }
         
     // import
     else if (name == "IMPORT"){
@@ -158,15 +132,23 @@ void ofApp::update(){
     for(int i = 0, len = pointMasses.size(); i < len; ++i) {
         pointMasses[i].updatePhysics(timeStep);
         pointMasses[i].solveConstraints(linkStiffnessMul);
-        if (mouseInteract) pointMasses[i].updateInteractions(prevMousePosition, mousePosition, mouseInfluenceSize, mouseInfluenceScalar);
+    }
+    
+    if (mouseInteract){
+        
+        ofMatrix4x4 transform = fboMatrix.getInverse();
+        ofVec3f transformedPrevMousePosition = prevMousePosition * transform;
+        ofVec3f transformedMousePosition = mousePosition * transform;
+        
+        for(int i = 0, len = pointMasses.size(); i < len; ++i) {
+            pointMasses[i].updateInteractions(transformedPrevMousePosition, transformedMousePosition, mouseInfluenceSize, mouseInfluenceScalar);
+        }
     }
     
     prevMousePosition.set(mousePosition);
    
-    // update vertices
+    // iterate over cells, setting vertices position according to pointMass positions
     vector<ofVec3f>& vertices = mesh.getVertices();
-
-    // iterate over cells
     for (int y = 0; y < rows - 1; y++){
         for (int x = 0; x < columns - 1; x++){
      
@@ -192,7 +174,7 @@ void ofApp::update(){
 void ofApp::draw(){
     
     // draw mesh on fbo
-    ofSetColor(255, 255, 255);
+    ofBackground(0, 0, 0);
     
     fbo.begin();
     
@@ -210,6 +192,18 @@ void ofApp::draw(){
     ofDisableLighting();
     ofDisableAlphaBlending();
     
+    /*
+    // draw pointMasses
+    for(int i = 0, len = pointMasses.size(); i < len; ++i) {
+        
+        if ( pointMasses[i].isPinned()) ofSetColor(255, 0, 0);
+        else ofSetColor(0, 255, 0);
+        
+        ofVec3f pos = pointMasses[i].position;
+        ofCircle(pos.x, pos.y, pos.z, 4);
+    }
+     */
+    
     fbo.end();
     
     // draw fbo, scaled to fit window
@@ -223,28 +217,29 @@ void ofApp::draw(){
     
     float scaleFactor;
     
-    if (imRatio > sRatio){
-        // fit based on width
-        scaleFactor = sw / imw;
-    } else {
-        // fit based on height
-        scaleFactor = sh / imh;
-    }
+    if (imRatio > sRatio) scaleFactor = sw / imw; // fit based on width
+    else scaleFactor = sh / imh; // fit based on height
+     
+    float tx = (sw - imw * scaleFactor) * 0.5;
+    float ty = (sh - imh * scaleFactor) * 0.5;
     
     ofPushMatrix();
-    ofTranslate((sw - imw * scaleFactor) * 0.5, (sh - imh * scaleFactor) * 0.5);
+    ofTranslate(tx, ty);
     ofScale(scaleFactor, scaleFactor);
-    
     fbo.draw(0, 0);
-    
     ofPopMatrix();
+    
+    // store fbo transform so we can tranform mouse coodinates to interact with it
+    fboMatrix.makeIdentityMatrix();
+    fboMatrix.glTranslate((sw - imw * scaleFactor) * 0.5, (sh - imh * scaleFactor) * 0.5, 0);
+    fboMatrix.glScale(scaleFactor, scaleFactor, scaleFactor);
 }
 
-// lets us update grid diemnsion and resolution
+// lets us update grid dimensions and resolution
 void ofApp::resetGrid(){
     
     float cellWidth = texture.getWidth() / (float) (columns - 1);
-    float cellHeight = texture.getWidth() / (float) (rows - 1);
+    float cellHeight = texture.getHeight() / (float) (rows - 1);
     
     // create cells
     
@@ -305,41 +300,23 @@ void ofApp::resetGrid(){
             for (int k = 0; k < 6; k++) mesh.addNormal(normal);
 		}
 	}
-    
-    mesh.enableNormals();
 }
 
 void ofApp::importImage(){
-
-    cout << "IMPORT!" << endl;
-    
     ofFileDialogResult dfr = ofSystemLoadDialog();
-    cout << "dfr.getName(): " << dfr.getName() << endl;
-    cout << "dfr.getPath(): " << dfr.getPath() << endl;
-    
     importImage(dfr.getPath());
 }
 
 void ofApp::importImage(string path){
-    
     texture.clear();
-    pixels.clear();
-    
     ofLoadImage(texture, path);
     fbo.allocate(texture.getWidth(), texture.getHeight(), GL_RGBA); // [fbo.destroy] is called in [fbo.allocate]
-    pixels.allocate(texture.getWidth(), texture.getHeight(), OF_IMAGE_COLOR);
+    pixels.allocate(texture.getWidth(), texture.getHeight(), OF_IMAGE_COLOR); // [pixels.clear] is called in [pixels.clear]
 }
 
 void ofApp::exportImage(){
-    
     gui.saveSettings("settings.xml");
-    
-    cout << "EXPORT!" << endl;
-    
     ofFileDialogResult dfr = ofSystemSaveDialog("export.png", "Export image.");
-    cout << "dfr.getName(): " << dfr.getName() << endl;
-    cout << "dfr.getPath(): " << dfr.getPath() << endl;
-    
     pixels.clear();
     fbo.readToPixels(pixels);
     ofSaveImage(pixels, dfr.getPath());    
@@ -351,27 +328,20 @@ void ofApp::keyPressed(int key){
 }
 
 //--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-    
-}
+void ofApp::keyReleased(int key){ }
 
 //--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-    //mousePosition.set(x, y, mouseZ);
-}
+void ofApp::mouseMoved(int x, int y ){ }
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
-    // TODO: DRY THIS
-    ofVec3f mouse(x * texture.getWidth() / ofGetWidth(), y * texture.getHeight() / ofGetHeight(), mouseZ);
-    mousePosition.set(mouse);
+    mousePosition.set(x, y, mouseZ * ofRandom(1.f));
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
     mouseInteract = true;
-    ofVec3f mouse(x * texture.getWidth() / ofGetWidth(), y * texture.getHeight() / ofGetHeight(), mouseZ);
-    mousePosition.set(mouse);
+    mousePosition.set(x, y, mouseZ);
     prevMousePosition.set(mousePosition);
 }
 
@@ -381,19 +351,13 @@ void ofApp::mouseReleased(int x, int y, int button){
 }
 
 //--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-    
-}
+void ofApp::windowResized(int w, int h){ }
 
 //--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-    
-}
+void ofApp::gotMessage(ofMessage msg){ }
 
 //--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){
-    
-}
+void ofApp::dragEvent(ofDragInfo dragInfo){ }
 
 /*
  from vboExample project
@@ -425,9 +389,4 @@ void ofApp::addTexCoords(ofMesh& mesh, ofVec2f a, ofVec2f b, ofVec2f c) {
 void ofApp::addTexCoords(ofMesh& mesh, ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d) {
 	addTexCoords(mesh, a, b, c);
 	addTexCoords(mesh, a, c, d);
-}
-
-//--------------------------------------------------------------
-ofVec3f ofApp::getVertexFromImg(ofImage& img, int x, int y) {
-	return ofVec3f(x - img.getWidth() / 2, y - img.getHeight() / 2, 0);
 }

@@ -43,6 +43,8 @@ public:
     
     void pinTo(ofVec3f position_);
     
+    bool isPinned();
+    
     PointMass(ofVec3f position_);
     
     ~PointMass();
