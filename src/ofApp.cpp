@@ -2,15 +2,19 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-        
+    
     ofSetVerticalSync(true);
-	importImage("images/iceberg.png");
     mouseInteract = false;
     animateFlag = true;
     timeStamp = ofGetElapsedTimef();
 	mesh.setMode(OF_PRIMITIVE_TRIANGLES);
     
+    // load / save pic
+    gui.addLabelButton("IMPORT_IMAGE", false);
+    gui.addLabelButton("EXPORT_IMAGE", false);
+    
     // grid
+    gui.addSpacer();
     columns = 10;
     rows = 10;
     resetGrid();
@@ -21,6 +25,7 @@ void ofApp::setup(){
     gui.addSlider("LINK_STIFFNESS_FACTOR", 0, 1.f, linkStiffnessMul);
     
     // mouse
+    gui.addSpacer();
     mouseInfluenceSize = 100.f;
     gui.addSlider("MOUSE_INFLUENCE_SIZE", 0, 400.f, mouseInfluenceSize);
     mouseInfluenceScalar = .8f;
@@ -30,6 +35,7 @@ void ofApp::setup(){
     
     // light
     light.setPointLight();
+    gui.addSpacer();
     
     // light smoothing
     ofSetSmoothLighting(true);
@@ -44,9 +50,8 @@ void ofApp::setup(){
     gui.addSlider("LIGHT_POSITION_Y", -dLightPos, dLightPos, lightPosition.y);
     gui.addSlider("LIGHT_POSITION_Z", -0.2f * dLightPos, dLightPos, lightPosition.z);
     
-    // load / save pic
-    gui.addButton("IMPORT", false);
-    gui.addButton("EXPORT", false);
+    gui.addSpacer();
+    gui.addTextArea("INFO", "Press [SPACE] to pause / resume animation.");
     
     gui.autoSizeToFitWidgets();
     //gui.loadSettings("settings.xml");
@@ -57,8 +62,20 @@ void ofApp::guiEvent(ofxUIEventArgs &e) {
     
     string name = e.getName();
     
+    // import
+    if (name == "IMPORT_IMAGE"){
+        ofxUIButton *btn = e.getButton();
+        if (btn->getValue()) importImage();
+    }
+    
+    // export
+    else if (name == "EXPORT_IMAGE"){
+        ofxUIButton *btn = e.getButton();
+        if (btn->getValue()) exportImage();
+    }
+    
     // grid
-    if (name == "ROWS"){
+    else if (name == "ROWS"){
         ofxUISlider *slider = e.getSlider();
         rows = (int) floorf(slider->getScaledValue());
         resetGrid();
@@ -105,24 +122,12 @@ void ofApp::guiEvent(ofxUIEventArgs &e) {
         lightPosition.z = slider->getScaledValue();
         light.setPosition(lightPosition);
     }
-        
-    // import
-    else if (name == "IMPORT"){
-        ofxUIButton *btn = e.getButton();
-        if (btn->getValue()) importImage();
-    }
-    
-    // export
-    else if (name == "EXPORT"){
-        ofxUIButton *btn = e.getButton();
-        if (btn->getValue()) exportImage();
-    }
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
     
-    if (!animateFlag) return;
+    if (!animateFlag || !texture.isAllocated()) return;
     
     // update physics
     float elapsedTime = ofGetElapsedTimef();
@@ -173,8 +178,9 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     
-    // draw mesh on fbo
-    ofBackground(0, 0, 0);
+    ofBackground(60, 60, 60);
+    
+    if (!texture.isAllocated()) return;
     
     fbo.begin();
     
@@ -312,6 +318,7 @@ void ofApp::importImage(string path){
     ofLoadImage(texture, path);
     fbo.allocate(texture.getWidth(), texture.getHeight(), GL_RGBA); // [fbo.destroy] is called in [fbo.allocate]
     pixels.allocate(texture.getWidth(), texture.getHeight(), OF_IMAGE_COLOR); // [pixels.clear] is called in [pixels.clear]
+    resetGrid();
 }
 
 void ofApp::exportImage(){
